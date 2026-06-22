@@ -1,7 +1,7 @@
 # ✈️ Aviation Reservation System (항공 예약 시스템)
 
 > Spring Boot 백엔드 포트폴리오를 위한 항공 예약 REST API 서버입니다.
-> 항공편 검색, 승객 등록, 좌석 예약/취소, JWT 인증까지 구현한 항공 예약 관리 서비스입니다.
+> 항공편 검색, 좌석 예약/취소, JWT 인증, 관리자 API, 통계 대시보드까지 구현한 항공 예약 관리 서비스입니다.
 
 ---
 
@@ -13,6 +13,8 @@
   - Spring Boot 백엔드 포트폴리오
   - Spring Security + JWT 인증 실습
   - JPA 연관관계 매핑 및 트랜잭션 처리 실전 경험
+  - 동시성 제어 (낙관적 락) 실습
+  - 관리자 API 및 통계 집계 구현 경험
   - Docker 기반 개발 환경 구성 실습
 
 ---
@@ -43,68 +45,68 @@
 - 패키지 구조 설계 (config / controller / service / repository / entity / dto)
 - .gitignore, application.yml 설정
 
-### ✅ Phase 2. Docker PostgreSQL 환경 구성
-- Docker Compose로 PostgreSQL 16 컨테이너 구성
-- aviation_db / aviation / 1234 설정
-- 로컬(local) 프로파일 분리 (ddl-auto: create-drop)
-
-### ✅ Phase 3. 엔티티 설계 및 JPA 매핑
-- Flight, Passenger, Reservation 엔티티 설계
-- @ManyToOne / @OneToMany 연관관계 매핑
-- FlightStatus, ReservationStatus Enum 정의
-
-### ✅ Phase 4. 항공편 / 승객 / 예약 CRUD API 구현
-- 항공편 등록 / 조회 / 검색 / 상태 변경
-- 승객 등록 / 조회
-- 예약 생성 / 조회 / 취소 (좌석 수 동기화 트랜잭션 처리)
-- GlobalExceptionHandler 전역 예외 처리
-
-### 🔜 Phase 5. JWT 인증 전환
-- Spring Security HTTP Basic → JWT Bearer Token 방식 전환
-- 로그인 API 구현 (Access Token 발급)
-- JwtFilter, JwtProvider 구현
+### ✅ Phase 2. 인증 API (JWT + Role)
+- Spring Security + JWT Bearer Token 인증 구현
+- 회원가입 / 로그인 API (Access Token 발급)
+- JwtTokenProvider, JwtAuthenticationFilter 구현
+- ROLE_USER / ROLE_ADMIN 권한 분리
 - 인증/인가 예외 처리 (401, 403)
 
-### 🔜 Phase 6. API 응답 표준화 및 예외 처리 고도화
-- 공통 응답 포맷 (ApiResponse wrapper) 적용
-- 에러 코드 Enum 정의
-- Validation 에러 응답 정비
+### ✅ Phase 3. 항공편 / 좌석 API
+- 항공편 등록 / 조회 / 검색 / 상태 변경
+- 좌석 자동 생성 및 좌석별 조회
+- FlightStatus Enum 정의 (`SCHEDULED` · `DELAYED` · `CANCELLED` · `DEPARTED` · `ARRIVED`)
+- GlobalExceptionHandler 전역 예외 처리
 
-### 🔜 Phase 7. 단위 테스트 / 통합 테스트 작성
-- JUnit5 + Mockito 단위 테스트
-- @SpringBootTest 통합 테스트
-- 예약 생성 / 취소 시나리오 테스트
+### ✅ Phase 4. 예약 API (Transaction + 동시성 제어)
+- 예약 생성 / 조회 / 취소 (좌석 수 동기화 트랜잭션 처리)
+- 낙관적 락(Optimistic Lock)을 활용한 좌석 중복 예약 방지
+- ReservationStatus Enum 정의 (`CONFIRMED` · `PENDING` · `CANCELLED`)
+- 예약 취소 시 좌석 반환 트랜잭션 처리
 
-### 🔜 Phase 8. 배포 환경 구성
+### ✅ Phase 5. 관리자 API + 통계
+- 관리자 전용 항공편 등록 / 수정 API (`ROLE_ADMIN` 전용)
+- 관리자 전용 전체 예약 조회 및 예약 상태 변경 API
+- 일별 / 월별 / 노선별 예약 통계 집계 API
+- JPQL 기반 통계 쿼리 구현
+
+### 🔲 Phase 6. MSA 구조 분리
+- 인증 / 항공편 / 예약 서비스 분리
+- Spring Cloud Gateway, Eureka Service Registry 도입
+
+### 🔲 Phase 7. GitLab CI/CD + 배포
 - 운영(prod) 프로파일 분리
-- GitHub Actions CI/CD 파이프라인 구성
-- AWS EC2 또는 Railway 배포
+- GitLab CI/CD 파이프라인 구성
+- AWS EC2 배포
+
+### 🔲 Phase 8. README + 포트폴리오 정리
+- API 문서화 (Swagger / Spring REST Docs)
+- 포트폴리오 README 고도화
 
 ---
 
 ## 📡 API 목록
 
+### 🔐 인증 (Auth)
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| POST | /api/auth/signup | 회원가입 (JWT 발급) | ❌ |
+| POST | /api/auth/login | 로그인 (JWT 발급) | ❌ |
+
+---
+
 ### 🛫 항공편 (Flights)
 
 | Method | Endpoint | 설명 | 인증 |
 |--------|----------|------|------|
-| POST | /api/flights | 항공편 등록 | ✅ |
-| GET | /api/flights | 전체 항공편 조회 | ✅ |
+| GET | /api/flights | 전체 항공편 조회 | ❌ |
 | GET | /api/flights/{id} | 항공편 단건 조회 | ❌ |
 | GET | /api/flights/search?origin=&destination=&departureTime= | 항공편 검색 | ❌ |
+| GET | /api/flights/{id}/seats | 항공편 좌석 목록 조회 | ✅ |
 | PATCH | /api/flights/{id}/status?status= | 항공편 상태 변경 | ✅ |
 
 **FlightStatus:** `SCHEDULED` · `DELAYED` · `CANCELLED` · `DEPARTED` · `ARRIVED`
-
----
-
-### 👤 승객 (Passengers)
-
-| Method | Endpoint | 설명 | 인증 |
-|--------|----------|------|------|
-| POST | /api/passengers | 승객 등록 | ✅ |
-| GET | /api/passengers | 전체 승객 조회 | ✅ |
-| GET | /api/passengers/{id} | 승객 단건 조회 | ✅ |
 
 ---
 
@@ -114,19 +116,46 @@
 |--------|----------|------|------|
 | POST | /api/reservations | 예약 생성 | ✅ |
 | GET | /api/reservations/{reservationCode} | 예약 단건 조회 | ✅ |
-| GET | /api/reservations/passenger/{passengerId} | 승객별 예약 목록 | ✅ |
+| GET | /api/reservations/my | 내 예약 목록 조회 | ✅ |
 | DELETE | /api/reservations/{reservationCode} | 예약 취소 | ✅ |
 
 **ReservationStatus:** `CONFIRMED` · `PENDING` · `CANCELLED`
 
 ---
 
-### 🔐 인증 (현재: HTTP Basic → Phase 5에서 JWT 전환 예정)
+### 🛡 관리자 - 항공편 (Admin Flights) `ROLE_ADMIN`
 
-| Method | Endpoint | 설명 |
-|--------|----------|------|
-| POST | /api/auth/login | 로그인 (JWT 발급) — Phase 5 |
-| POST | /api/auth/register | 회원가입 — Phase 5 |
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| POST | /api/admin/flights | 항공편 등록 | ✅ ADMIN |
+| PUT | /api/admin/flights/{id} | 항공편 수정 | ✅ ADMIN |
+
+---
+
+### 🛡 관리자 - 예약 (Admin Reservations) `ROLE_ADMIN`
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | /api/admin/reservations | 전체 예약 목록 조회 | ✅ ADMIN |
+| PATCH | /api/admin/reservations/{id}/status?status= | 예약 상태 강제 변경 | ✅ ADMIN |
+
+---
+
+### 📊 관리자 - 통계 (Admin Stats) `ROLE_ADMIN`
+
+| Method | Endpoint | 설명 | 인증 |
+|--------|----------|------|------|
+| GET | /api/admin/stats/daily | 일별 예약 수 / 매출 통계 | ✅ ADMIN |
+| GET | /api/admin/stats/monthly | 월별 예약 수 / 매출 통계 | ✅ ADMIN |
+| GET | /api/admin/stats/route | 노선별 예약 수 / 매출 통계 | ✅ ADMIN |
+
+**통계 응답 필드**
+
+| 통계 유형 | 응답 필드 |
+|-----------|-----------|
+| 일별 (DailyStats) | `date`, `reservationCount`, `totalRevenue` |
+| 월별 (MonthlyStats) | `year`, `month`, `reservationCount`, `totalRevenue` |
+| 노선별 (RouteStats) | `origin`, `destination`, `reservationCount`, `totalRevenue` |
 
 ---
 
@@ -136,28 +165,41 @@
 src/main/java/com/aviation/reservation/
 ├── ReservationApplication.java
 ├── config/
-│   ├── SecurityConfig.java           # Spring Security 설정
-│   └── GlobalExceptionHandler.java   # 전역 예외 처리
+│   ├── SecurityConfig.java               # Spring Security + JWT 설정
+│   ├── JwtTokenProvider.java             # JWT 생성 / 검증
+│   ├── JwtAuthenticationFilter.java      # JWT 필터
+│   └── GlobalExceptionHandler.java       # 전역 예외 처리
 ├── controller/
-│   ├── FlightController.java
-│   ├── PassengerController.java
-│   └── ReservationController.java
+│   ├── AuthController.java               # 회원가입 / 로그인
+│   ├── FlightController.java             # 항공편 조회 / 검색
+│   ├── ReservationController.java        # 예약 생성 / 조회 / 취소
+│   ├── AdminFlightController.java        # 관리자 항공편 등록 / 수정
+│   └── AdminReservationController.java   # 관리자 예약 관리 / 통계
 ├── service/
+│   ├── AuthService.java
 │   ├── FlightService.java
-│   ├── PassengerService.java
-│   └── ReservationService.java
+│   ├── SeatService.java
+│   ├── ReservationService.java
+│   └── AdminService.java                 # 관리자 비즈니스 로직 + 통계 집계
 ├── repository/
+│   ├── UserRepository.java
 │   ├── FlightRepository.java
+│   ├── SeatRepository.java
 │   ├── PassengerRepository.java
-│   └── ReservationRepository.java
+│   └── ReservationRepository.java        # JPQL 통계 쿼리 포함
 ├── entity/
-│   ├── Flight.java                   # FlightStatus Enum 포함
+│   ├── User.java                         # ROLE_USER / ROLE_ADMIN
+│   ├── Flight.java                       # FlightStatus Enum 포함
+│   ├── Seat.java                         # 좌석 엔티티
 │   ├── Passenger.java
-│   └── Reservation.java              # ReservationStatus Enum 포함
+│   └── Reservation.java                  # ReservationStatus Enum 포함
 └── dto/
-    ├── FlightDto.java                # inner static Request / Response
+    ├── AuthDto.java                      # SignupRequest / LoginRequest / TokenResponse
+    ├── FlightDto.java                    # Request / UpdateRequest / Response
+    ├── SeatDto.java
     ├── PassengerDto.java
-    └── ReservationDto.java
+    ├── ReservationDto.java               # Request / Response
+    └── StatsDto.java                     # DailyStats / MonthlyStats / RouteStats
 ```
 
 ---
@@ -217,19 +259,23 @@ docker compose down -v   # 데이터 초기화
 
 ```
 ┌──────────────┐       ┌─────────────────────┐       ┌──────────────┐
-│   flights    │       │     reservations     │       │  passengers  │
+│   flights    │       │     reservations     │       │    users     │
 ├──────────────┤       ├─────────────────────┤       ├──────────────┤
 │ id (PK)      │◄──┐   │ id (PK)             │   ┌──►│ id (PK)      │
-│ flightNumber │   └───│ flight_id (FK)       │   │   │ firstName    │
-│ origin       │       │ passenger_id (FK)    │───┘   │ lastName     │
-│ destination  │       │ reservationCode      │       │ email        │
-│ departureTime│       │ seatNumber           │       │ phone        │
-│ arrivalTime  │       │ status               │       │ passportNum  │
-│ totalSeats   │       │ reservedAt           │       └──────────────┘
-│ availSeats   │       └─────────────────────┘
-│ price        │
-│ status       │
-└──────────────┘
+│ flightNumber │   └───│ flight_id (FK)       │   │   │ username     │
+│ origin       │       │ user_id (FK)         │───┘   │ password     │
+│ destination  │       │ seat_id (FK)         │──┐    │ email        │
+│ departureTime│       │ reservationCode      │  │    │ role         │
+│ arrivalTime  │       │ status               │  │    └──────────────┘
+│ totalSeats   │       │ reservedAt           │  │
+│ availSeats   │       └─────────────────────┘  │    ┌──────────────┐
+│ price        │                                 └───►│    seats     │
+│ status       │◄──────────────────────────────────── ├──────────────┤
+└──────────────┘                                      │ id (PK)      │
+                                                      │ flight_id(FK)│
+                                                      │ seatNumber   │
+                                                      │ isAvailable  │
+                                                      └──────────────┘
 ```
 
 ---
@@ -241,14 +287,16 @@ docker compose down -v   # 데이터 초기화
 - @Transactional 트랜잭션 처리 / readOnly 최적화
 - DTO 패턴 (inner static class Request / Response 분리)
 - Bean Validation (@NotBlank, @Email, @Future 등)
-- Spring Security HTTP Basic / Stateless 세션 설정
+- Spring Security + JWT Bearer Token 인증 / Stateless 세션
+- ROLE_USER / ROLE_ADMIN 권한 분리 및 엔드포인트 접근 제어
+- 낙관적 락(Optimistic Lock)을 활용한 동시성 제어 (좌석 중복 예약 방지)
 - GlobalExceptionHandler / @RestControllerAdvice 전역 예외 처리
+- JPQL 기반 집계 쿼리 (일별 / 월별 / 노선별 통계)
 - Docker Compose PostgreSQL 개발 환경 구성
 - application.yml 프로파일 분리 (local / prod)
-- JWT Bearer Token 인증 (Phase 5 예정)
 
 ---
 
 ## ✨ 한 줄 소개
 
-**Aviation Reservation System은 Spring Boot 3.4 + JPA + JWT 인증 + Docker를 활용한 항공 예약 관리 백엔드 포트폴리오 프로젝트입니다.**
+**Aviation Reservation System은 Spring Boot 3.4 + JPA + JWT 인증 + 동시성 제어 + 관리자 통계 API를 구현한 항공 예약 관리 백엔드 포트폴리오 프로젝트입니다.**
