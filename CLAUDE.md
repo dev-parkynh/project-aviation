@@ -25,7 +25,7 @@
 | Phase | 내용 | 상태 |
 |-------|------|:----:|
 | Phase 1 | 프로젝트 세팅 | ✅ 완료 |
-| Phase 2 | 인증 API (JWT + Role) | 🔲 진행 예정 |
+| Phase 2 | 인증 API (JWT + Role) | ✅ 완료 |
 | Phase 3 | 항공편/좌석 API | 🔲 진행 예정 |
 | Phase 4 | 예약 API (Transaction + 동시성 제어) | 🔲 진행 예정 |
 | Phase 5 | 관리자 API + 통계 | 🔲 진행 예정 |

@@ -17,6 +17,10 @@ spring:
       name: admin
       password: admin
 
+jwt:
+  secret: ${JWT_SECRET:YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
 server:
   port: 8080
 
