@@ -3,9 +3,6 @@ package com.aviation.reservation.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "passengers")
 @Getter
@@ -19,22 +16,16 @@ public class Passenger {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
-    private String firstName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id", nullable = false)
+    private Reservation reservation;
 
-    @Column(nullable = false, length = 50)
-    private String lastName;
-
-    @Column(nullable = false, unique = true, length = 100)
-    private String email;
+    @Column(nullable = false, length = 100)
+    private String name;
 
     @Column(nullable = false, length = 20)
-    private String phone;
+    private String passportNo;
 
-    @Column(nullable = false, length = 20)
-    private String passportNumber;
-
-    @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<Reservation> reservations = new ArrayList<>();
+    @Column(nullable = false, length = 50)
+    private String nationality;
 }

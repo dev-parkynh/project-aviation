@@ -1,6 +1,7 @@
 package com.aviation.reservation.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 public class PassengerDto {
@@ -13,24 +14,16 @@ public class PassengerDto {
     public static class Request {
 
         @NotBlank
-        @Size(max = 50)
-        private String firstName;
-
-        @NotBlank
-        @Size(max = 50)
-        private String lastName;
-
-        @NotBlank
-        @Email
-        private String email;
-
-        @NotBlank
-        @Pattern(regexp = "^[+]?[0-9]{10,15}$")
-        private String phone;
+        @Size(max = 100)
+        private String name;
 
         @NotBlank
         @Size(max = 20)
-        private String passportNumber;
+        private String passportNo;
+
+        @NotBlank
+        @Size(max = 50)
+        private String nationality;
     }
 
     @Getter
@@ -38,10 +31,8 @@ public class PassengerDto {
     public static class Response {
 
         private Long id;
-        private String firstName;
-        private String lastName;
-        private String email;
-        private String phone;
-        private String passportNumber;
+        private String name;
+        private String passportNo;
+        private String nationality;
     }
 }

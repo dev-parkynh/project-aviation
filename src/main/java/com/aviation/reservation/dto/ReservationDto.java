@@ -1,11 +1,15 @@
 package com.aviation.reservation.dto;
 
 import com.aviation.reservation.entity.Reservation;
-import jakarta.validation.constraints.NotBlank;
+import com.aviation.reservation.entity.Seat;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class ReservationDto {
 
@@ -20,10 +24,11 @@ public class ReservationDto {
         private Long flightId;
 
         @NotNull
-        private Long passengerId;
+        private Long seatId;
 
-        @NotBlank
-        private String seatNumber;
+        @NotEmpty
+        @Valid
+        private List<PassengerDto.Request> passengers;
     }
 
     @Getter
@@ -31,11 +36,16 @@ public class ReservationDto {
     public static class Response {
 
         private Long id;
-        private String reservationCode;
+        private String userName;
         private String flightNumber;
-        private String passengerName;
-        private String seatNumber;
+        private String origin;
+        private String destination;
+        private LocalDateTime departureTime;
+        private String seatNo;
+        private Seat.SeatClass seatClass;
         private Reservation.ReservationStatus status;
-        private LocalDateTime reservedAt;
+        private BigDecimal totalPrice;
+        private LocalDateTime createdAt;
+        private List<PassengerDto.Response> passengers;
     }
 }

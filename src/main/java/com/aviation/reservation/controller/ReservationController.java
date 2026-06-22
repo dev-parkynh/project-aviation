@@ -22,18 +22,18 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationService.createReservation(request));
     }
 
-    @GetMapping("/{reservationCode}")
-    public ResponseEntity<ReservationDto.Response> getReservation(@PathVariable String reservationCode) {
-        return ResponseEntity.ok(reservationService.getReservation(reservationCode));
+    @GetMapping
+    public ResponseEntity<List<ReservationDto.Response>> getMyReservations() {
+        return ResponseEntity.ok(reservationService.getMyReservations());
     }
 
-    @GetMapping("/passenger/{passengerId}")
-    public ResponseEntity<List<ReservationDto.Response>> getReservationsByPassenger(@PathVariable Long passengerId) {
-        return ResponseEntity.ok(reservationService.getReservationsByPassenger(passengerId));
+    @GetMapping("/{id}")
+    public ResponseEntity<ReservationDto.Response> getReservation(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.getReservation(id));
     }
 
-    @DeleteMapping("/{reservationCode}")
-    public ResponseEntity<ReservationDto.Response> cancelReservation(@PathVariable String reservationCode) {
-        return ResponseEntity.ok(reservationService.cancelReservation(reservationCode));
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<ReservationDto.Response> cancelReservation(@PathVariable Long id) {
+        return ResponseEntity.ok(reservationService.cancelReservation(id));
     }
 }

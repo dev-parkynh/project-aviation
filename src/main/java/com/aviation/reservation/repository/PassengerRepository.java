@@ -3,13 +3,9 @@ package com.aviation.reservation.repository;
 import com.aviation.reservation.entity.Passenger;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface PassengerRepository extends JpaRepository<Passenger, Long> {
 
-    Optional<Passenger> findByEmail(String email);
-
-    Optional<Passenger> findByPassportNumber(String passportNumber);
-
-    boolean existsByEmail(String email);
+    List<Passenger> findByReservationId(Long reservationId);
 }
