@@ -14,11 +14,12 @@ public interface FlightRepository extends JpaRepository<Flight, Long> {
     Optional<Flight> findByFlightNumber(String flightNumber);
 
     @Query("SELECT f FROM Flight f WHERE f.origin = :origin AND f.destination = :destination " +
-           "AND f.departureTime >= :departureTime AND f.availableSeats > 0 " +
-           "AND f.status = 'SCHEDULED'")
+           "AND f.departureTime >= :start AND f.departureTime <= :end " +
+           "AND f.availableSeats > 0 AND f.status = 'SCHEDULED'")
     List<Flight> findAvailableFlights(@Param("origin") String origin,
                                       @Param("destination") String destination,
-                                      @Param("departureTime") LocalDateTime departureTime);
+                                      @Param("start") LocalDateTime start,
+                                      @Param("end") LocalDateTime end);
 
     List<Flight> findByStatus(Flight.FlightStatus status);
 }

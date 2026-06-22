@@ -1,16 +1,16 @@
 package com.aviation.reservation.controller;
 
 import com.aviation.reservation.dto.FlightDto;
+import com.aviation.reservation.dto.SeatDto;
 import com.aviation.reservation.entity.Flight;
 import com.aviation.reservation.service.FlightService;
-import jakarta.validation.Valid;
+import com.aviation.reservation.service.SeatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -19,10 +19,18 @@ import java.util.List;
 public class FlightController {
 
     private final FlightService flightService;
+    private final SeatService seatService;
 
-    @PostMapping
-    public ResponseEntity<FlightDto.Response> createFlight(@Valid @RequestBody FlightDto.Request request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(flightService.createFlight(request));
+    @GetMapping
+    public ResponseEntity<List<FlightDto.Response>> getFlights(
+            @RequestParam(required = false) String departure,
+            @RequestParam(required = false) String arrival,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        if (departure != null && arrival != null && date != null) {
+            return ResponseEntity.ok(flightService.searchFlights(departure, arrival, date));
+        }
+        return ResponseEntity.ok(flightService.getAllFlights());
     }
 
     @GetMapping("/{id}")
@@ -30,17 +38,9 @@ public class FlightController {
         return ResponseEntity.ok(flightService.getFlight(id));
     }
 
-    @GetMapping
-    public ResponseEntity<List<FlightDto.Response>> getAllFlights() {
-        return ResponseEntity.ok(flightService.getAllFlights());
-    }
-
-    @GetMapping("/search")
-    public ResponseEntity<List<FlightDto.Response>> searchFlights(
-            @RequestParam String origin,
-            @RequestParam String destination,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime departureTime) {
-        return ResponseEntity.ok(flightService.searchFlights(origin, destination, departureTime));
+    @GetMapping("/{id}/seats")
+    public ResponseEntity<List<SeatDto.Response>> getSeats(@PathVariable Long id) {
+        return ResponseEntity.ok(seatService.getSeatsByFlightId(id));
     }
 
     @PatchMapping("/{id}/status")

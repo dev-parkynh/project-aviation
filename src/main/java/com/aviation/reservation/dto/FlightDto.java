@@ -44,15 +44,31 @@ public class FlightDto {
     }
 
     @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class UpdateRequest {
+        private String flightNumber;
+        private String origin;
+        private String destination;
+        private LocalDateTime departureTime;
+        private LocalDateTime arrivalTime;
+        private Integer totalSeats;
+        private BigDecimal price;
+        private Flight.FlightStatus status;
+    }
+
+    @Getter
     @Builder
     public static class Response {
-
         private Long id;
         private String flightNumber;
         private String origin;
         private String destination;
         private LocalDateTime departureTime;
         private LocalDateTime arrivalTime;
+        private Integer totalSeats;
         private Integer availableSeats;
         private BigDecimal price;
         private Flight.FlightStatus status;

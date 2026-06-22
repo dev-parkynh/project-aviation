@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,6 +39,24 @@ public class FlightService {
         return toResponse(flightRepository.save(flight));
     }
 
+    @Transactional
+    public FlightDto.Response updateFlight(Long id, FlightDto.UpdateRequest request) {
+        Flight flight = findById(id);
+        if (request.getFlightNumber() != null) flight.setFlightNumber(request.getFlightNumber());
+        if (request.getOrigin() != null) flight.setOrigin(request.getOrigin());
+        if (request.getDestination() != null) flight.setDestination(request.getDestination());
+        if (request.getDepartureTime() != null) flight.setDepartureTime(request.getDepartureTime());
+        if (request.getArrivalTime() != null) flight.setArrivalTime(request.getArrivalTime());
+        if (request.getPrice() != null) flight.setPrice(request.getPrice());
+        if (request.getStatus() != null) flight.setStatus(request.getStatus());
+        if (request.getTotalSeats() != null) {
+            int diff = request.getTotalSeats() - flight.getTotalSeats();
+            flight.setTotalSeats(request.getTotalSeats());
+            flight.setAvailableSeats(Math.max(0, flight.getAvailableSeats() + diff));
+        }
+        return toResponse(flight);
+    }
+
     public FlightDto.Response getFlight(Long id) {
         return toResponse(findById(id));
     }
@@ -48,8 +67,10 @@ public class FlightService {
                 .collect(Collectors.toList());
     }
 
-    public List<FlightDto.Response> searchFlights(String origin, String destination, LocalDateTime departureTime) {
-        return flightRepository.findAvailableFlights(origin, destination, departureTime).stream()
+    public List<FlightDto.Response> searchFlights(String origin, String destination, LocalDate date) {
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59);
+        return flightRepository.findAvailableFlights(origin, destination, start, end).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -74,6 +95,7 @@ public class FlightService {
                 .destination(flight.getDestination())
                 .departureTime(flight.getDepartureTime())
                 .arrivalTime(flight.getArrivalTime())
+                .totalSeats(flight.getTotalSeats())
                 .availableSeats(flight.getAvailableSeats())
                 .price(flight.getPrice())
                 .status(flight.getStatus())
