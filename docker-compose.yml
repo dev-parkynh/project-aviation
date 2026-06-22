@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aviation-postgres
+    environment:
+      POSTGRES_DB: aviation_db
+      POSTGRES_USER: aviation
+      POSTGRES_PASSWORD: "1234"
+    ports:
+      - "5432:5432"
+    volumes:
+      - aviation-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aviation -d aviation_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  aviation-postgres-data:
