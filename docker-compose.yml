@@ -16,5 +16,84 @@ services:
       timeout: 5s
       retries: 5
 
+  eureka-server:
+    build: ./eureka-server
+    container_name: aviation-eureka
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: aviation-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}
+
+  auth-service:
+    build: ./auth-service
+    container_name: aviation-auth
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aviation_db
+      DB_USERNAME: aviation
+      DB_PASSWORD: "1234"
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}
+
+  flight-service:
+    build: ./flight-service
+    container_name: aviation-flight
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aviation_db
+      DB_USERNAME: aviation
+      DB_PASSWORD: "1234"
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}
+      WEATHER_API_KEY: ${WEATHER_API_KEY:-dummy}
+
+  booking-service:
+    build: ./booking-service
+    container_name: aviation-booking
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      flight-service:
+        condition: service_started
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/aviation_db
+      DB_USERNAME: aviation
+      DB_PASSWORD: "1234"
+      EUREKA_URI: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}
+      MAIL_USERNAME: ${MAIL_USERNAME:-your-email@gmail.com}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-your-app-password}
+
 volumes:
   aviation-postgres-data:

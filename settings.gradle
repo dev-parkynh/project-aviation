@@ -1,1 +1,6 @@
 rootProject.name = 'project-aviation'
+include 'eureka-server'
+include 'gateway-service'
+include 'auth-service'
+include 'flight-service'
+include 'booking-service'
