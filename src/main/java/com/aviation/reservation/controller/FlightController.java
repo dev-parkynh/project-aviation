@@ -1,8 +1,10 @@
 package com.aviation.reservation.controller;
 
+import com.aviation.reservation.dto.ExternalApiDto;
 import com.aviation.reservation.dto.FlightDto;
 import com.aviation.reservation.dto.SeatDto;
 import com.aviation.reservation.entity.Flight;
+import com.aviation.reservation.service.ExternalApiService;
 import com.aviation.reservation.service.FlightService;
 import com.aviation.reservation.service.SeatService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +22,7 @@ public class FlightController {
 
     private final FlightService flightService;
     private final SeatService seatService;
+    private final ExternalApiService externalApiService;
 
     @GetMapping
     public ResponseEntity<List<FlightDto.Response>> getFlights(
@@ -48,5 +51,16 @@ public class FlightController {
             @PathVariable Long id,
             @RequestParam Flight.FlightStatus status) {
         return ResponseEntity.ok(flightService.updateFlightStatus(id, status));
+    }
+
+    @GetMapping("/{id}/weather")
+    public ResponseEntity<ExternalApiDto.WeatherResponse> getFlightWeather(@PathVariable Long id) {
+        String destination = flightService.getFlight(id).getDestination();
+        return ResponseEntity.ok(externalApiService.getWeatherByCity(destination));
+    }
+
+    @GetMapping("/exchange-rate")
+    public ResponseEntity<ExternalApiDto.ExchangeRateResponse> getExchangeRate() {
+        return ResponseEntity.ok(externalApiService.getExchangeRates());
     }
 }

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예약 확인</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f0f4f8; color: #1a202c; }
+    .wrapper { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 36px 40px; text-align: center; }
+    .header h1 { margin: 0; color: #ffffff; font-size: 26px; letter-spacing: 1px; }
+    .header p { margin: 8px 0 0; color: #bfdbfe; font-size: 14px; }
+    .badge { display: inline-block; margin-top: 16px; padding: 6px 18px; background-color: #22c55e; color: #ffffff; border-radius: 20px; font-size: 13px; font-weight: 600; }
+    .body { padding: 36px 40px; }
+    .greeting { font-size: 16px; margin-bottom: 28px; line-height: 1.6; color: #374151; }
+    .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #6b7280; margin-bottom: 12px; }
+    .card { background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 20px 24px; margin-bottom: 20px; }
+    .route { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .city { font-size: 22px; font-weight: 700; color: #1e3a8a; }
+    .arrow { font-size: 22px; color: #2563eb; }
+    .flight-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .meta-item { }
+    .meta-label { font-size: 11px; color: #6b7280; margin-bottom: 2px; }
+    .meta-value { font-size: 14px; font-weight: 600; color: #1f2937; }
+    .passenger-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .passenger-table th { text-align: left; padding: 8px 12px; background-color: #dbeafe; color: #1e40af; font-weight: 600; border-radius: 4px; }
+    .passenger-table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; color: #374151; }
+    .passenger-table tr:last-child td { border-bottom: none; }
+    .price-row { display: flex; justify-content: space-between; align-items: center; background-color: #1e3a8a; color: #ffffff; border-radius: 8px; padding: 16px 24px; margin-bottom: 20px; }
+    .price-label { font-size: 14px; color: #bfdbfe; }
+    .price-value { font-size: 22px; font-weight: 700; }
+    .notice { background-color: #fefce8; border-left: 4px solid #f59e0b; border-radius: 4px; padding: 14px 18px; font-size: 13px; color: #78350f; line-height: 1.6; margin-bottom: 20px; }
+    .footer { background-color: #1e3a8a; padding: 24px 40px; text-align: center; }
+    .footer p { margin: 4px 0; color: #93c5fd; font-size: 12px; }
+    .footer strong { color: #ffffff; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+
+  <div class="header">
+    <h1>✈ Project Aviation</h1>
+    <p>항공 예약 시스템</p>
+    <div class="badge">예약 확정</div>
+  </div>
+
+  <div class="body">
+
+    <p class="greeting">
+      안녕하세요, <strong th:text="${reservation.userName}">홍길동</strong>님.<br>
+      아래와 같이 항공권 예약이 확정되었습니다.
+    </p>
+
+    <!-- 항공편 정보 -->
+    <div class="section-title">항공편 정보</div>
+    <div class="card">
+      <div class="route">
+        <span class="city" th:text="${reservation.origin}">ICN</span>
+        <span class="arrow">→</span>
+        <span class="city" th:text="${reservation.destination}">NRT</span>
+      </div>
+      <div class="flight-meta">
+        <div class="meta-item">
+          <div class="meta-label">편명</div>
+          <div class="meta-value" th:text="${reservation.flightNumber}">KE001</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">출발 일시</div>
+          <div class="meta-value" th:text="${#temporals.format(reservation.departureTime, 'yyyy-MM-dd HH:mm')}">2026-07-01 10:00</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">좌석 번호</div>
+          <div class="meta-value" th:text="${reservation.seatNo}">12A</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">좌석 등급</div>
+          <div class="meta-value" th:text="${reservation.seatClass}">ECONOMY</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">예약 번호</div>
+          <div class="meta-value" th:text="'#' + ${reservation.id}">-</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">예약 상태</div>
+          <div class="meta-value" th:text="${reservation.status}">CONFIRMED</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 탑승객 정보 -->
+    <div class="section-title">탑승객 정보</div>
+    <div class="card" style="padding: 0; overflow: hidden;">
+      <table class="passenger-table">
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>여권번호</th>
+            <th>국적</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${reservation.passengers}">
+            <td th:text="${p.name}">홍길동</td>
+            <td th:text="${p.passportNo}">M12345678</td>
+            <td th:text="${p.nationality}">KR</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 결제 금액 -->
+    <div class="price-row">
+      <span class="price-label">결제 금액</span>
+      <span class="price-value">₩ <span th:text="${#numbers.formatDecimal(reservation.totalPrice, 1, 'COMMA', 0, 'POINT')}">150,000</span></span>
+    </div>
+
+    <!-- 안내 사항 -->
+    <div class="notice">
+      ⚠ 탑승 수속은 출발 2시간 전까지 완료해 주세요.<br>
+      예약 취소는 출발 24시간 전까지 가능합니다.
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <strong>Project Aviation</strong>
+    <p>본 메일은 발신 전용입니다. 문의는 고객센터를 이용해 주세요.</p>
+    <p>© 2026 Project Aviation. All rights reserved.</p>
+  </div>
+
+</div>
+</body>
+</html>

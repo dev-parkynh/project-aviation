@@ -48,6 +48,6 @@ public class Reservation {
     private List<Passenger> passengers = new ArrayList<>();
 
     public enum ReservationStatus {
-        CONFIRMED, CANCELLED
+        PENDING, CONFIRMED, CANCELLED, EXPIRED
     }
 }

@@ -25,6 +25,7 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final UserRepository userRepository;
     private final FlightService flightService;
+    private final MailService mailService;
 
     @Transactional
     public ReservationDto.Response createReservation(ReservationDto.Request request) {
@@ -70,7 +71,9 @@ public class ReservationService {
                 .collect(Collectors.toList());
         reservation.getPassengers().addAll(passengers);
 
-        return toResponse(reservationRepository.save(reservation));
+        ReservationDto.Response response = toResponse(reservationRepository.save(reservation));
+        mailService.sendReservationConfirm(user.getEmail(), response);
+        return response;
     }
 
     public List<ReservationDto.Response> getMyReservations() {

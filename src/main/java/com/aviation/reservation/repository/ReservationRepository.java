@@ -5,11 +5,28 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
     List<Reservation> findByUserId(Long userId);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.seat JOIN FETCH r.flight " +
+           "WHERE r.status = :status AND r.createdAt < :expiredBefore")
+    List<Reservation> findByStatusAndCreatedAtBefore(
+            @Param("status") Reservation.ReservationStatus status,
+            @Param("expiredBefore") LocalDateTime expiredBefore);
+
+    @Query("SELECT r.flight.origin, r.flight.destination, COUNT(r), COALESCE(SUM(r.totalPrice), 0) " +
+           "FROM Reservation r WHERE r.status = :status " +
+           "AND YEAR(r.createdAt) = :year AND MONTH(r.createdAt) = :month " +
+           "GROUP BY r.flight.origin, r.flight.destination " +
+           "ORDER BY COUNT(r) DESC")
+    List<Object[]> findMonthlyRouteStats(
+            @Param("status") Reservation.ReservationStatus status,
+            @Param("year") int year,
+            @Param("month") int month);
 
     List<Reservation> findByUserEmail(String email);
 

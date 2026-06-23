@@ -1,4 +1,9 @@
 spring:
+  batch:
+    job:
+      enabled: false        # 애플리케이션 시작 시 Job 자동 실행 방지
+    jdbc:
+      initialize-schema: always   # Spring Batch 메타 테이블 자동 생성
   datasource:
     url: jdbc:postgresql://localhost:5432/aviation_db
     username: ${DB_USERNAME:aviation}
@@ -12,10 +17,25 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:your-email@gmail.com}    # Gmail 계정
+    password: ${MAIL_PASSWORD:your-app-password}       # Gmail 앱 비밀번호 (2단계 인증 후 발급)
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   security:
     user:
       name: admin
       password: admin
+
+weather:
+  api:
+    key: ${WEATHER_API_KEY}
 
 jwt:
   secret: ${JWT_SECRET:YXZpYXRpb24tcHJvamVjdC1qd3Qtc2VjcmV0LWtleXM=}

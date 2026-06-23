@@ -29,6 +29,7 @@
 | Phase 3 | 항공편/좌석 API | ✅ 완료 |
 | Phase 4 | 예약 API (Transaction + 동시성 제어) | ✅ 완료 |
 | Phase 5 | 관리자 API + 통계 | ✅ 완료 |
+| Phase 6-A | 배치/스케줄러 (미결제 만료 + 월별 정산) | ✅ 완료 |
 | Phase 6 | MSA 구조 분리 | 🔲 진행 예정 |
 | Phase 7 | GitLab CI/CD + 배포 | 🔲 진행 예정 |
 | Phase 8 | README + 포트폴리오 정리 | 🔲 진행 예정 |
@@ -50,11 +51,12 @@
 
 ```
 com.aviation.reservation
-├── config/       # SecurityConfig, GlobalExceptionHandler
+├── config/       # SecurityConfig, GlobalExceptionHandler, BatchConfig
 ├── controller/   # REST 컨트롤러
+├── scheduler/    # ReservationScheduler (@Scheduled)
 ├── service/      # 비즈니스 로직
 ├── repository/   # Spring Data JPA
-├── entity/       # JPA 엔티티
+├── entity/       # JPA 엔티티 (MonthlyStat 포함)
 └── dto/          # Request / Response (inner static class 패턴)
 ```
 
