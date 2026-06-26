@@ -30,6 +30,5 @@ out/
 .vscode/
 
 ### Sensitive ###
-application-prod.yml
 *.env
 .env

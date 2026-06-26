@@ -13,7 +13,8 @@
 4. [Phase별 구현 내용](#4-phase별-구현-내용)
 5. [기술 선택 이유](#5-기술-선택-이유)
 6. [로컬 실행 방법](#6-로컬-실행-방법)
-7. [API 엔드포인트](#7-api-엔드포인트)
+7. [배포 가이드](#7-배포-가이드-gitlab-cicd--aws-ec2)
+8. [API 엔드포인트](#8-api-엔드포인트)
 
 ---
 
@@ -442,7 +443,87 @@ docker compose up -d
 
 ---
 
-## 7. API 엔드포인트
+## 7. 배포 가이드 (GitLab CI/CD + AWS EC2)
+
+### 아키텍처
+
+```
+GitLab Push (main)
+    │
+    ▼
+[build]  → Gradle 빌드, JAR 아티팩트 생성
+    │
+    ▼
+[test]   → PostgreSQL 서비스 컨테이너로 통합 테스트
+    │
+    ▼
+[docker-build] → 5개 서비스 Docker 이미지 빌드 & Docker Hub 푸시 (병렬)
+    │
+    ▼
+[deploy] → EC2 SSH 접속 → docker compose pull & up
+    │
+    ▼
+AWS EC2
+  nginx:80 → gateway-service:8080 → MSA 서비스들
+```
+
+### GitLab CI/CD 변수 설정
+
+GitLab 프로젝트 → Settings → CI/CD → Variables에서 아래 변수를 등록합니다.
+
+| 변수 | 설명 | Masked |
+|------|------|:------:|
+| `DOCKERHUB_USERNAME` | Docker Hub 사용자명 | ❌ |
+| `DOCKERHUB_TOKEN` | Docker Hub Access Token | ✅ |
+| `EC2_HOST` | EC2 퍼블릭 IP 또는 도메인 | ❌ |
+| `EC2_USER` | EC2 접속 사용자 (기본값: `ubuntu`) | ❌ |
+| `EC2_SSH_KEY` | EC2 접속용 PEM 키 내용 (전체) | ✅ |
+
+### EC2 초기 설정
+
+```bash
+# EC2 접속 후 1회 실행
+sudo apt update && sudo apt install -y docker.io docker-compose-plugin
+sudo usermod -aG docker ubuntu
+sudo mkdir -p /app
+sudo chown ubuntu:ubuntu /app
+
+# .env 파일 생성 (배포 전 필수)
+cp .env.example /app/.env
+vi /app/.env   # 실제 값으로 채워 넣기
+```
+
+### 배포 흐름
+
+1. `main` 브랜치에 푸시하면 GitLab CI 파이프라인이 자동으로 시작됩니다.
+2. `docker-build` 스테이지에서 5개 서비스가 병렬로 빌드·푸시됩니다.
+   - 이미지 태그: `{commit SHA}` + `latest` 두 가지로 푸시
+3. `deploy` 스테이지에서 `deploy.sh`가 EC2로 `docker-compose.prod.yml`을 전송하고 배포합니다.
+
+### 수동 배포 (긴급 시)
+
+```bash
+# EC2에서 직접 실행
+cd /app
+export DOCKERHUB_USERNAME=your-username
+export IMAGE_TAG=latest
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d --remove-orphans
+```
+
+### 주요 파일
+
+| 파일 | 설명 |
+|------|------|
+| `.gitlab-ci.yml` | CI/CD 파이프라인 정의 (4 stage) |
+| `docker-compose.prod.yml` | 프로덕션용 Compose (이미지 참조) |
+| `deploy.sh` | EC2 배포 자동화 스크립트 |
+| `nginx/nginx.conf` | Nginx 리버스 프록시 설정 |
+| `.env.example` | 환경변수 템플릿 |
+
+---
+
+## 8. API 엔드포인트
 
 모든 요청은 `gateway-service` (`:8080`)를 통해 들어옵니다.  
 인증 필요 엔드포인트는 `Authorization: Bearer <token>` 헤더를 포함해야 합니다.
